@@ -1,5 +1,4 @@
-Pysana
-=======
+pysana
+======
 
-
-Placeholder
+Python class to access the Asana API
