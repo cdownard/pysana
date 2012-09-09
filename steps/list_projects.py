@@ -4,7 +4,7 @@ import pysana
 
 @given(u'there are currently projects')
 def step(context):
-    context.key = 'oHKGELa.71Xsjl1PalAaX2cydWcke1DP'
+    context.key = 'yourKey'
     context.api = pysana.API(context.key)
     assert True
 
