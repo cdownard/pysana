@@ -6,7 +6,7 @@ import json
 class API(object):
     def __init__(self, key):
         """
-        workspaces, projects, and users are arrays of dicts.
+        workspaces and projects are arrays of dicts.
         The workspaces array stores in the following way:
         {
             'id': 12345869,
@@ -15,7 +15,7 @@ class API(object):
         Please note that the ID is not a string. Asana's docs do not reflect
         that the ID may contain characters, however it is possible in the tests
         that have been run. If a string representation of the ID field is
-        passed back to the Asana API, an error will occur and the response will
+        passed back to the Asana API, an error will occur and the resposne will
         say that the workspace does not exist.
         """
         self.key = key
@@ -24,39 +24,50 @@ class API(object):
         self.api_url = self.url + "/" + self.api_version
         self.workspaces = []
         self.projects = []
-        self.users = []
+
+    def create_basic_auth(self):
+        '''Creates the basic auth credential to be passed.
+        Asana specifies that the username should be the api
+        key and the password should be blank separated by a
+        colon. Thus, 'apikey:' is used and then encoded in
+        base64.'''
+
+        encode_me = self.key + ':'
+        return encode_me.encode('base64').rstrip()
 
     # Self Maintenance
     def update_workspaces(self):
         current = self.workspaces()
-        for workspace in current:
-            if workspace not in self.workspaces:
-                self.workspaces.append(workspace)
+        for w in current:
+            if w not in self.workspaces:
+                self.workspaces.append(w)
 
     def update_projects(self):
         current = self.projects()
-        for project in current:
-            if project not in self.projects:
-                self.projects.append(project)
+        for p in current:
+            if p not in self.projects:
+                self.projects.append(p)
 
-    def update_users(self):
-        current = self.users_list()
-        for user in current:
-            if user not in self.users:
-                self.users.append(user)
-
-    # Projects
+    ############
+    # Projects #
+    ############
     def projects(self):
         url = self.api_url + '/projects'
-        return self.get_data(url)
+        get_request = requests.get(url, auth=(self.key, ''))
+        json_data = json.loads(get_request.text)['data']
+        return json_data
 
     def project_tasks(self, project_id):
         url = self.api_url + '/project/' + str(project_id) + '/tasks'
-        return self.get_data(url)
+        get_request = requests.get(url, auth=(self.key, ''))
+        json_data = json.loads(get_request.text)['data']
+        return json_data
 
     def project_details(self, project_id):
         url = self.api_url + '/project/' + str(project_id)
-        return self.get_data(url)
+        get_request = requests.get(url, auth=(self.key, ''))
+        json_data = json.loads(get_request.text)['data']
+        return json_data
 
     def new_project(self, workspace_id, project_name, project_notes=None):
         url = self.api_url + '/workspaces/' + str(workspace_id) + '/projects'
@@ -65,61 +76,28 @@ class API(object):
             put_data['notes'] = project_notes
         else:
             put_data['notes'] = ''
-        return self.post_data(url, put_data)
+        post_request = requests.post(url, auth=(self.key, ''), data=(put_data))
+        json_data = json.loads(post_request.text)['data']
+        return json_data
 
-    def project_change_details(self, project_id, project_name=None, project_notes=None):
-        url = self.api_url + '/projects/' + str(project_id)
-        put_data = {}
-        if project_name:
-            put_data['name'] = project_name
-        if project_notes:
-            put_data['notes'] = project_notes
-        return self.post_data(url, put_data)
-
-    # Users
-    def users_list(self):
-        """
-        This method return all users in all workspaces. It does not return what
-        work space the user belongs to.
-        """
-        url = self.api_url + '/users'
-        return self.get_data(url)
-
-    def users_in_workspace(self, workspace_id):
-        """
-        Returns list of users in a specific workspace. Use the workspace id
-        from the workspace field (the key is 'id'). Alternatively, the id
-        may be provided manually.
-        """
-        url = self.api_url + '/workspaces/' + str(workspace_id) + '/users'
-        return self.get_data(url)
-
-    def user_details(self, user_id):
-        """
-        Returns the details on a given user including member workspaces.
-        """
-        url = self.api_url + '/users/' + str(user_id)
-        return self.get_data(url)
-
-    # Workspaces
+    ##############
+    # Workspaces #
+    ##############
     def workspaces(self):
         url = self.api_url + '/workspaces'
-        return self.get_data(url)
+        get_request = requests.get(url, auth=(self.key, ''))
+        json_data = json.loads(get_request.text)['data']
+        return json_data
 
     def workspace_details(self, workspace_id):
         url = self.api_url + '/workspace/' + str(workspace_id)
-        return self.get_data(url)
+        get_request = requests.get(url, auth=(self.key, ''))
+        json_data = json.loads(get_request.text)['data']
+        return json_data
 
     def workspace_name(self, workspace_id, workspace_name):
         url = self.api_url + '/workspace/' + str(workspace_id)
         put_data = {'name': workspace_name}
-        return self.post_data(url, put_data)
-
-    # Utility methods
-    def get_data(self, url):
-        get_request = requests.get(url, auth=(self.key, ''))
-        return json.loads(get_request.text)['data']
-
-    def post_data(self, url, put_data):
         post_request = requests.post(url, auth=(self.key, ''), data=(put_data))
-        return json.loads(post_request.text)['data']
+        json_data = json.loads(post_request.text)['data']
+        return json_data
