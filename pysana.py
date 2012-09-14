@@ -122,9 +122,28 @@ class API(object):
 
     # Utility methods
     def get_data(self, url):
+        """
+        Users are responsible for handling what happens when
+        an error is received. The JSON returned will have the
+        following format:
+
+        {"errors":[{"message":"Request data must be a JSON object, not null"}]}
+        or 
+        {"errors":[{"message":"No matching route for request"}]}
+
+        Pysana will return the errors dict or the data dict.
+        """
         get_request = requests.get(url, auth=(self.key, ''))
-        return json.loads(get_request.text)['data']
+        j = json.loads(get_request.text)
+        if 'errors' in j:
+            return j
+        else:
+            return j['data']
 
     def post_data(self, url, put_data):
         post_request = requests.post(url, auth=(self.key, ''), data=(put_data))
-        return json.loads(post_request.text)['data']
+        j = json.loads(post_request.text)
+        if 'errors' in j:
+            return j
+        else:
+            return j['data']

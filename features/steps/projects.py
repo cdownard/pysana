@@ -30,7 +30,7 @@ def step(context):
 def step(context):
     context.projects = context.api.projects_list(context.api.workspaces[0]['id'])
 
-@then(u"we will see the current list of projects in that workspace")
+@then(u"we will see the current list of projects for that workspace")
 def step(context):
     assert context.projects
 
