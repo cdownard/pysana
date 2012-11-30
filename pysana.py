@@ -35,7 +35,7 @@ class API(object):
                 self.workspaces.append(workspace)
 
     def update_projects(self):
-        current = self.project_list()
+        current = self.projects_list()
         for project in current:
             if project not in self.projects:
                 self.projects.append(project)
@@ -65,12 +65,12 @@ class API(object):
 
     def new_project(self, workspace_id, project_name, project_notes=None):
         url = self.api_url + '/workspaces/' + str(workspace_id) + '/projects'
-        put_data = {'name': project_name, 'id': workspace_id}
+        post_data = {'name': project_name, 'id': workspace_id}
         if project_notes:
-            put_data['notes'] = project_notes
+            post_data['notes'] = project_notes
         else:
-            put_data['notes'] = ''
-        return self.post_data(url, put_data)
+            post_data['notes'] = ''
+        return self.post_data(url, post_data)
 
     def project_change_details(self, project_id, project_name=None, project_notes=None):
         url = self.api_url + '/projects/' + str(project_id)
@@ -80,6 +80,76 @@ class API(object):
         if project_notes:
             put_data['notes'] = project_notes
         return self.post_data(url, put_data)
+
+    #Stories
+    def story_details(self, story_id):
+        url = self.api_url + '/stories/' + str(story_id)
+        return self.get_data(url)
+    
+    def stories_for_task(self, task_id):
+        url = self.api_url + '/tasks/' + str(task_id) + '/stories'
+        return self.get_data(url)
+
+    def stories_for_project(self, project_id):
+        url = self.api_url + '/projects/' + str(project_id) + '/stories'
+        return self.get_data(url)
+
+    #Tags
+    def tag_details(self, tag_id):
+        url = self.api_url + '/tags/' + str(tag_id)
+        return self.get_data(url)
+
+    def tag_create(self, tag_data, workspace_id=None):
+        """
+        tag_data: a dictionary of the information for the new tag.
+        """
+        if workspace_id:
+            url = self.api_url + '/workspaces/' + str(workspace_id) + '/tags'
+        else:
+            url = self.api_url + '/tags'
+        return self.post_data(url, tag_data)
+
+    def tags_in_workspace(self, workspace_id):
+        url = self.api_url + '/workspaces/' + str(workspace_id) + '/tags'
+        return self.get_data(url)
+    
+    def tag_tasks(self, tag_id):
+        url = self.api_url + '/tags/' + str(tag_id) + '/tasks'
+        return self.get_data(url)
+
+    def tag_update(self, tag_id, update_dict):
+        url = self.api_url + '/tags/' + str(tag_id)
+        return self.post_data(url, update_dict)
+
+    def tags(self):
+        url = self.api_url + '/tags'
+        return self.get_data(url)
+
+    #Tasks
+    def task_create(self, workspace_id):
+        """
+        Create new task
+        workspace_id: the id of the workspace the task will be attached to.
+        """
+        url = self.api_url + '/workspaces/' + str(workspace_id) + '/tasks'
+                
+        return self.get_data(url)
+
+    def task_details(self, task_id):
+        url = self.api_url + '/tasks/' + str(task_id)
+        return self.get_data(url)
+
+    def tasks_in_project(self, project_id):
+        url = self.api_url + '/projects/' + str(project_id) + '/tasks'
+        return self.get_data(url)
+    
+    def tasks_in_worskapce(self, workspace_id):
+        url = self.api_url + '/workspaces/' + str(workspace_id) + '/tasks'
+        return self.get_data(url)
+
+    def tasks(self):
+        url = self.api_url + '/tasks'
+        return self.get_data(url)
 
     # Users
     def users_list(self):
@@ -112,13 +182,13 @@ class API(object):
         return self.get_data(url)
 
     def workspace_details(self, workspace_id):
-        url = self.api_url + '/workspace/' + str(workspace_id)
+        url = self.api_url + '/workspaces/' + str(workspace_id)
         return self.get_data(url)
 
     def workspace_name(self, workspace_id, workspace_name):
-        url = self.api_url + '/workspace/' + str(workspace_id)
+        url = self.api_url + '/workspaces/' + str(workspace_id)
         put_data = {'name': workspace_name}
-        return self.post_data(url, put_data)
+        return self.put_data(url, put_data)
 
     # Utility methods
     def get_data(self, url):
@@ -140,9 +210,17 @@ class API(object):
         else:
             return j['data']
 
-    def post_data(self, url, put_data):
-        post_request = requests.post(url, auth=(self.key, ''), data=(put_data))
+    def post_data(self, url, post_data):
+        post_request = requests.post(url, auth=(self.key, ''), data=(post_data))
         j = json.loads(post_request.text)
+        if 'errors' in j:
+            return j
+        else:
+            return j['data']
+
+    def put_data(self, url, put_data):
+        put_request = requests.put(url, auth=(self.key, ''), data=(put_data))
+        j = json.loads(put_request.text)
         if 'errors' in j:
             return j
         else:
